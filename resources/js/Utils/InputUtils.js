@@ -1,4 +1,5 @@
 // utils/InputUtils.js
+import IMask from 'imask'
 
 export function RestrictInput(value = '', type = 'none') {
     switch (type) {
@@ -90,4 +91,26 @@ export function GetErrorText({ error, internalError }) {
     if (Array.isArray(error)) return error[0]
     if (typeof error === 'string') return error
     return null
+}
+
+export function MoneyMask(el, onAccept) {
+    if (!el) return;
+
+    const mask = IMask(el, {
+        mask: Number,
+        scale: 2,
+        signed: false,
+        thousandsSeparator: ',',
+        padFractionalZeros: true,
+        normalizeZeros: true,
+        radix: '.',
+        mapToRadix: [','],
+        min: 0,
+    });
+
+    mask.on('accept', () => {
+        onAccept(mask.unmaskedValue);
+    });
+
+    return mask;
 }
