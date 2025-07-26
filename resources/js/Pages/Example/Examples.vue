@@ -4,20 +4,6 @@
             <MdButton @click="ChangeModal()">Abrir modal</MdButton>
         </template>
 
-                <MdTextInput
-                    v-model="form.nombre"
-                    id="nombre"
-                    name="nombre"
-                    label="Nombre"
-                    helper="Nombre del ejemplo"
-                    :required="true"
-                    :maxlength="50"
-                    :inputRestrict="'letters'"
-                    :uppercase="true"
-                    iconClass="fa fa-user"
-                    :error="form.errors.nombre"
-                    :success="!form.errors.nombre"
-                />
 
         <section>
             <AgGrid
@@ -38,10 +24,31 @@
                 <section ref="FormSection" class="space-y-4">
                     <div class="grid grid-cols-1 my-2 md:grid-cols-2 gap-x-4">
                         <div class="col-span-2">
-                            <MdTextInput v-model="form.nombre" required label="Nombre" />
+                            <MdTextInput
+                                v-model="form.nombre"
+                                id="nombre"
+                                name="nombre"
+                                label="Nombre"
+                                helper="Nombre del ejemplo"
+                                :required="true"
+                                :maxlength="50"
+                                :inputRestrict="'letters'"
+                                :uppercase="true"
+                                iconClass="fa fa-user"
+                                :error="form.errors.nombre"
+                                :success="!form.errors.nombre"
+                            />
+
                         </div>
                         <div>
-                            <MdNumberInput v-model="form.edad_aproximada" required label="Edad Aproximada" />
+                            <MdNumberInput
+                                v-model="form.edad_aproximada"
+                                id="edad_aproximada"
+                                name="edad_aproximada"
+                                required
+                                iconClass="fa fa-user"
+                                label="Edad Aproximada"
+                            />
                         </div>
                         <div>
                             <MdTextInput v-model="form.especie" required label="Especie" />
