@@ -63,7 +63,7 @@
                     class="px-4 py-2 hover:bg-[var(--color-primary-light)] cursor-pointer transition-colors"
                     :class="{ 'bg-[var(--color-primary-light)]': isSelected(option) }"
                 >
-                    {{ option.label }}
+                    {{ option.text }}
                 </div>
             </div>
         </transition>
@@ -125,7 +125,7 @@ const errorText = computed(() => {
 
 const filteredOptions = computed(() =>
     props.options.filter(opt =>
-        opt.label.toLowerCase().includes(search.value.toLowerCase())
+        opt.label.toUpperCase().includes(search.value.toUpperCase())
     )
 )
 

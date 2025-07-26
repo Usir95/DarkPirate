@@ -4,6 +4,21 @@
             <MdButton @click="ChangeModal()">Abrir modal</MdButton>
         </template>
 
+                <MdTextInput
+                    v-model="form.nombre"
+                    id="nombre"
+                    name="nombre"
+                    label="Nombre"
+                    helper="Nombre del ejemplo"
+                    :required="true"
+                    :maxlength="50"
+                    :inputRestrict="'letters'"
+                    :uppercase="true"
+                    iconClass="fa fa-user"
+                    :error="form.errors.nombre"
+                    :success="!form.errors.nombre"
+                />
+
         <section>
             <AgGrid
                 :initial-row-data="Examples"
