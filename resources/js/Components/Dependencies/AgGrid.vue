@@ -1,6 +1,6 @@
 <template>
     <AgGridVue
-        :class="`${isDarkMode ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'} w-full px-3 py-2`"
+        :class="`ag-theme-quartz w-full px-3 py-2`"
         :style="`height: ${height}`"
         :localeText="localeText"
         :rowData="rowData"
