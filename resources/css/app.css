@@ -21,12 +21,12 @@
     --color-background: #f3f4f6;
 
     --color-foreground:#1e293b;
-    --color-surface: #ffffff;
+    --color-surface: #f3f4f6;
     --color-border: #f3f4f6;
 }
 
 .dark {
-    --color-background: #101828;
+    --color-background: #1f2937;
 
     --color-foreground:#F8FAFC;
     --color-surface: #1f2937;
@@ -116,7 +116,7 @@
         gap: 0.25rem;
         transition: all 0.3s ease-in-out;
         transform-origin: top left;
-        background-color: var(--color-background);
+        background-color: var(--color-surface);
     }
 
     .md-label--unfocused {

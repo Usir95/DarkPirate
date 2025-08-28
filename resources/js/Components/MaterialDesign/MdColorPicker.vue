@@ -20,7 +20,7 @@
         <div
             class="flex items-center border-2 rounded-xl h-10 transition-all duration-300 ease-in-out shadow-sm relative"
             :class="inputPadding"
-            :style="{ borderColor, backgroundColor: 'var(--color-prymary)' }"
+            :style="{ borderColor, backgroundColor: 'var(--color-primary)' }"
         >
             <!-- Ícono izquierdo opcional -->
             <i v-if="iconClass" :class="iconClass" class="absolute left-3 text-base text-[var(--color-primary-light)]"></i>

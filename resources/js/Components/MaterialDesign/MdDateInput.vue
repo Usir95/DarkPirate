@@ -1,100 +1,66 @@
 <template>
     <div class="relative w-full my-3 px-1" data-md-input="true" ref="rootRef">
         <!-- Label flotante -->
-        <label v-if="label" :for="id"
-            class="absolute text-sm transition-all duration-300 ease-in-out px-1 pointer-events-none z-10 flex items-center gap-1 transform"
+        <label v-if="label" :for="id" class="md-label"
             :class="[
-                isFocused || internalValue
-                    ? `text-[0.75rem] -top-2.5 scale-90 ${labelColor}`
-                    : 'top-2.5 scale-100 text-gray-500',
-                iconLeft || iconClass ? 'left-10' : 'left-3'
+                isFocused || internalValue ? `text-[0.75rem] -top-2.5 scale-90 ${GetLabelColor(props.error)}` : 'md-label--unfocused',
+                iconClass ? 'md-label--with-icon' : 'md-label--no-icon'
             ]"
-            :style="{ backgroundColor }"
         >
-            <!-- Asterisco si es requerido y campo vacío -->
-            <span
-                v-if="required && !internalValue && !errorText"
-                class="text-red-500 font-bold text-base leading-none"
-            >*</span>
-
-            <!-- Palomita -->
-            <svg
-                v-else-if="success && !errorText"
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4 text-[var(--color-primary-hover)] ml-1 transition-all duration-300 transform scale-100"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-
-            <!-- X -->
-            <svg
-                v-else-if="errorText"
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4 text-[var(--color-complement-2)] ml-1 transition-all duration-300 transform scale-100"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <IconAsterisk v-if="required && !internalValue && !errorText" />
+        <IconCheck v-else-if="success && !errorText" />
+        <IconError v-else-if="errorText" />
 
             {{ label }}
         </label>
 
-        <!-- Icono izquierdo -->
-        <div
-            v-if="iconLeft || iconClass"
-            class="absolute left-3 h-10 flex items-center pointer-events-none"
-            :style="{ color: borderColor }"
-        >
-            <slot name="iconLeft" v-if="iconLeft" />
-            <i v-else :class="iconClass" class="text-base leading-none"></i>
-        </div>
+        <!-- Icono izquierdo (slot o clase) -->
+        <IconInput v-if="iconClass" :icon-class="iconClass" :color="borderColor"></IconInput>
 
-        <!-- Input de tipo date -->
-        <input :id="id" type="text" :name="name" ref="inputRef"
-            class="w-full h-10 border rounded-xl text-gray-800 dark:text-gray-100 placeholder-transparent focus:outline-none focus:ring-2 transition-all duration-300 ease-in-out shadow-sm focus:shadow-md"
-            :class="{
-                'opacity-50 cursor-not-allowed': disabled || readonly,
-                'pl-10 pr-4': iconLeft || iconClass,
-                'px-4': !iconLeft && !iconClass,
-                'ring-1 ring-inset': success
-            }"
-            :value="formattedValue"
-            :disabled="disabled"
-            :readonly="readonly"
+        <!-- Input -->
+        <input
+            :id="id"
+            type="text"
+            :name="name"
+            ref="inputRef"
             @click="toggleCalendar"
             @keydown="onKeydown"
             @focus="onFocus"
             @blur="onBlur"
             @input="onUserInput"
+            :placeholder="placeholder || 'dd/mm/aaaa'"
+            :aria-invalid="!!errorText" :aria-required="required || undefined"
+            :aria-expanded="showCalendar" :aria-controls="`cal-${id}`"
+            :aria-describedby="`${id}-help`"
+            :value="formattedValue"
+            :disabled="disabled" :readonly="readonly" :required="required"
+            autocomplete="off" autocapitalize="off" spellcheck="false"
+            inputmode="numeric" maxlength="10" pattern="^\\d{2}/\\d{2}/\\d{4}$"
             :style="{
-                backgroundColor,
-                borderColor,
-                '--tw-ring-color': borderColor,
-                transition: 'border-color 0.3s ease, background-color 0.3s ease'
+                backgroundColor: 'var(--color-background)',
+                '--md-border': borderColor, '--tw-ring-color': borderColor
+                }"
+            class="w-full h-10 rounded-xl border-2 bg-[var(--md-bg)] border-[var(--md-border)]
+                    text-[var(--field-fg)] placeholder-[var(--field-placeholder)]
+                    focus:outline-none focus:ring-2 shadow-sm focus:shadow-md"
+            :class="{
+                'opacity-50 cursor-not-allowed': disabled || readonly,
+                'pl-10 pr-4': !!iconClass,
+                'px-4': !iconClass,
+                'ring-1 ring-inset': success
             }"
         />
 
-        <!-- Mensaje de error o ayuda -->
+        <!-- Mensaje -->
         <div class="flex items-center justify-between text-xs px-1 mt-1 leading-tight">
-            <div class="ml-1" :class="errorText ? 'text-[var(--color-complement-2)] text-sm' : 'text-gray-400'">
-                {{ errorText || helper }}
-            </div>
+        <div class="ml-1" :class="errorText ? 'text-[var(--color-complement-2)] text-sm' : 'text-[var(--field-placeholder)]'">
+            {{ errorText || helper }}
+        </div>
         </div>
 
+        <!-- Calendario -->
         <transition name="calendar-fade">
-            <div
-                v-if="showCalendar"
-                ref="calendarRef"
-                class="absolute z-50 mt-2"
-                :style="{ top: '100%', left: '0' }"
-            >
+            <div v-if="showCalendar" ref="calendarRef" :id="`cal-${id}`" class="absolute z-50 mt-2 left-0 top-full">
                 <MdDateCalendar
                     v-model="internalValue"
                     @close="closeCalendar"
@@ -109,164 +75,134 @@
     </div>
 </template>
 
+
 <script setup>
 import { ref, watch, computed, useSlots, onMounted, onBeforeUnmount } from 'vue'
 import MdDateCalendar from './MdDateCalendar.vue'
+import IconCheck from '../Icons/IconCheck.vue'
+import IconError from '../Icons/IconError.vue'
+import IconAsterisk from '../Icons/IconAsterisk.vue'
+import IconInput from '../Icons/IconInput.vue'
 import dayjs from 'dayjs'
+import { GetLabelColor,
+    GetBorderColor,
+    GetErrorText,
+ } from '@/Utils/InputUtils.js'
+
 /* ======================= Props ========================== */
 const props = defineProps({
-    modelValue: String,
-    required: Boolean,
-    label: String,
-    placeholder: String,
-    name: String,
-    id: String,
-    disabled: Boolean,
-    readonly: Boolean,
-    error: [Boolean, String, Array],
-    success: { type: Boolean, default: false },
-    iconClass: { type: String, default: '' },
-    helper: { type: String, default: '' },
-    minDate: String,
-    maxDate: String,
-    disabledDates: Array,
-    disabledWeekdays: Array
+  modelValue: String,
+  required: Boolean,
+  label: String,
+  placeholder: String,
+  name: String,
+  id: String,
+  disabled: Boolean,
+  readonly: Boolean,
+  error: [Boolean, String, Array],
+  success: { type: Boolean, default: false },
+  iconClass: { type: String, default: '' },
+  helper: { type: String, default: '' },
+  minDate: String,
+  maxDate: String,
+  disabledDates: Array,
+  disabledWeekdays: Array
 })
-
 
 /* ======================= Emits ========================== */
 const emit = defineEmits(['update:modelValue', 'focus', 'blur'])
 
-/* ======================= Refs ========================== */
+/* ======================= State/Refs ====================== */
 const showCalendar = ref(false)
 const isFocused = ref(false)
 const internalValue = ref(props.modelValue ?? '')
 const internalError = ref('')
-const isDark = ref(false)
 const slots = useSlots()
 const inputRef = ref(null)
 const calendarRef = ref(null)
 
-/* ======================= Watchers ========================== */
+/* ======================= Sync externa ==================== */
+watch(() => props.modelValue, v => { internalValue.value = v ?? '' })
+
+/* ======================= Reacciones ====================== */
 watch(internalValue, (val) => {
-    internalError.value = ''
-
-    if (props.required && val === '') {
-        internalError.value = 'Este campo es obligatorio'
-    }
-
-    // Mostrar en el input el valor formateado
-    if (val && val.includes('-')) {
-        const [yyyy, mm, dd] = val.split('-')
-        if (inputRef.value) {
-            inputRef.value.value = `${dd}/${mm}/${yyyy}`
-        }
-    }
-
+    internalError.value = props.required && !val ? 'Este campo es obligatorio' : ''
     emit('update:modelValue', val)
 })
 
-
-/* ======================= Computed ========================== */
-const iconLeft = computed(() => !!slots.iconLeft)
-
-const backgroundColor = computed(() =>
-    isDark.value ? '#101828' : '#f3f4f6'
+/* ======================= Computed ======================== */
+const iconLeft = computed(() => !!slots.iconLeft) // si mantienes el slot; si no, quedará false
+const backgroundColor = computed(() => 'var(--field-bg)')
+const borderColor = computed(() =>
+    GetBorderColor({error: props.error, success: props.success, isFocused: isFocused.value,internalError: internalError.value})
 )
 
-const borderColor = computed(() => {
-    if (props.error || internalError.value) return 'var(--color-complement-2)'
-    if (props.success) return 'var(--color-primary-hover)'
-    if (isFocused.value) return 'var(--color-primary)'
-    return 'var(--color-primary-light)'
-})
+const labelColor = computed(() => GetLabelColor(props.error))
 
-const labelColor = computed(() =>
-    props.error ? 'text-[var(--color-complement-2)]' : 'text-[var(--color-primary)]'
+const errorText = computed(() =>
+    GetErrorText({ error: props.error, internalError: internalError.value})
 )
-
-const errorText = computed(() => {
-    if (internalError.value) return internalError.value
-    if (Array.isArray(props.error)) return props.error[0]
-    if (typeof props.error === 'string') return props.error
-    return null
-})
 
 const formattedValue = computed(() => {
     const [yyyy, mm, dd] = internalValue.value?.split('-') || []
     return dd && mm && yyyy ? `${dd}/${mm}/${yyyy}` : ''
 })
 
-/* ======================= Funciones ========================== */
-function onUserInput(e) {
-    let raw = e.target.value.replace(/\D/g, '').slice(0, 8)
-    let formatted = ''
+/* ======================= Helpers ========================= */
+function isDateDisabled(date) {
+    if (!date.isValid()) return true
+    if (props.minDate && date.isBefore(dayjs(props.minDate), 'day')) return true
+    if (props.maxDate && date.isAfter(dayjs(props.maxDate), 'day')) return true
+    if (props.disabledDates?.some(fd => dayjs(fd).isSame(date, 'day'))) return true
+    if (props.disabledWeekdays?.includes(date.day())) return true
+    return false
+    }
 
+    /* ======================= I/O ============================= */
+    function onUserInput(e) {
+    // máscara dd/mm/aaaa
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let formatted = ''
     if (raw.length >= 1) formatted += raw.slice(0, 2)
     if (raw.length >= 3) formatted += '/' + raw.slice(2, 4)
     if (raw.length >= 5) formatted += '/' + raw.slice(4)
-
     e.target.value = formatted
 
     if (raw.length === 8) {
         const dd = raw.slice(0, 2)
         const mm = raw.slice(2, 4)
         const yyyy = raw.slice(4)
-        const parsed = `${yyyy}-${mm}-${dd}`
-        const date = dayjs(parsed)
-
-        if (isDateDisabled(date)) {
-            internalError.value = 'Fecha no permitida'
-            updateValue('')
-        } else {
-            updateValue(parsed)
+        const iso = `${yyyy}-${mm}-${dd}`
+        const d = dayjs(iso)
+        if (isDateDisabled(d)) {
+        internalError.value = 'Fecha no permitida'
+        return // no cambies el modelo si es inválida
         }
-    } else {
-        updateValue('')
+        updateValue(iso)
     }
 }
-
-function isDateDisabled(date) {
-    if (!date.isValid()) return true
-
-    if (props.minDate && date.isBefore(dayjs(props.minDate), 'day')) return true
-    if (props.maxDate && date.isAfter(dayjs(props.maxDate), 'day')) return true
-    if (props.disabledDates?.some(fd => dayjs(fd).isSame(date, 'day'))) return true
-    if (props.disabledWeekdays?.includes(date.day())) return true
-
-    return false
-}
-
 
 function onKeydown(event) {
     if (event.key === 'Tab') {
-        const valid = validate()
-        if (!valid) {
-            event.preventDefault()
-        }
+        if (!validate()) event.preventDefault()
     }
 }
-
 
 function toggleCalendar() {
-    if (!props.disabled && !props.readonly) {
-        showCalendar.value = !showCalendar.value
-    }
+    if (!props.disabled && !props.readonly) showCalendar.value = !showCalendar.value
 }
 
-function handleClickOutside(event) {
-    if (calendarRef.value && !calendarRef.value.contains(event.target) && inputRef.value && !inputRef.value.contains(event.target)) {
+function handleOutside(ev) {
+    const t = ev.target
+    if (calendarRef.value && !calendarRef.value.contains(t) && inputRef.value && !inputRef.value.contains(t)) {
         showCalendar.value = false
     }
 }
 
-function closeCalendar() {
-    showCalendar.value = false
-}
+function closeCalendar() { showCalendar.value = false }
 
 function updateValue(val) {
-    internalValue.value = val
-    emit('update:modelValue', val)
+    internalValue.value = val // watcher emite al padre
 }
 
 function onFocus(e) {
@@ -276,37 +212,30 @@ function onFocus(e) {
 
 function onBlur(e) {
     isFocused.value = false
-    if (props.required && internalValue.value === '') {
-        internalError.value = 'Este campo es obligatorio'
+    // si quedó parcial, restaura lo que marca el modelo
+    const v = inputRef.value?.value || ''
+    if (v && v.replace(/\D/g, '').length !== 8) {
+        if (props.required && !internalValue.value) internalError.value = 'Este campo es obligatorio'
+        // re-render del placeholder actual del modelo
+        inputRef.value.value = formattedValue.value
     }
     emit('blur', e)
 }
 
 function validate() {
-    let message = ''
-
-    if (props.required && internalValue.value === '') {
-        message = 'Este campo es obligatorio'
-    }
-
-    internalError.value = message
-    return message === ''
+    const msg = props.required && !internalValue.value ? 'Este campo es obligatorio' : ''
+    internalError.value = msg
+    return msg === ''
 }
 
 defineExpose({ validate })
 
-/* ======================= Dark Mode ========================== */
+/* ======================= Lifecycle ======================= */
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
-    isDark.value = prefersDark.matches
-    prefersDark.addEventListener('change', (e) => {
-        isDark.value = e.matches
-    })
+  document.addEventListener('pointerdown', handleOutside, { passive: true })
 })
-
 onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('pointerdown', handleOutside)
 })
 </script>
 

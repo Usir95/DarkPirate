@@ -1,63 +1,64 @@
 <template>
-    <div class="w-72 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 select-none">
-        <!-- Encabezado con navegación -->
+    <div class="w-72 rounded-xl shadow-lg p-4 select-none
+                bg-[var(--color-surface)] text-[var(--color-foreground)] border border-[var(--color-border)]">
+
+        <!-- Encabezado -->
         <div class="flex items-center justify-between mb-3">
-            <button @click="prevMonth" class="text-gray-600 dark:text-gray-300 hover:text-primary">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <span class="font-semibold text-sm text-gray-800 dark:text-gray-100">
-                {{ meses[mes] }} {{ anio }}
-            </span>
-            <button @click="nextMonth" class="text-gray-600 dark:text-gray-300 hover:text-primary">
-                <i class="fas fa-chevron-right"></i>
-            </button>
+        <button @click="prevMonth"
+                class="opacity-80 text-[var(--color-foreground)] hover:text-[var(--color-primary)]">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <span class="font-semibold text-sm text-[var(--color-foreground)]">
+            {{ meses[mes] }} {{ anio }}
+        </span>
+
+        <button @click="nextMonth"
+                class="opacity-80 text-[var(--color-foreground)] hover:text-[var(--color-primary)]">
+            <i class="fas fa-chevron-right"></i>
+        </button>
         </div>
 
         <!-- Días de la semana -->
-        <div class="grid grid-cols-7 text-xs font-semibold text-center text-gray-500 dark:text-gray-400 mb-1">
-            <div v-for="d in dias" :key="d">{{ d }}</div>
+        <div class="grid grid-cols-7 text-xs font-semibold text-center text-[var(--field-placeholder)] mb-1">
+        <div v-for="d in dias" :key="d">{{ d }}</div>
         </div>
 
         <!-- Días del mes -->
         <div class="grid grid-cols-7 text-sm text-center">
-            <div
-                v-for="(d, index) in diasCalendario"
-                :key="index"
-                class="py-1.5"
+        <div v-for="(d, index) in diasCalendario" :key="index" class="py-1.5">
+            <!-- Día válido -->
+            <button
+            v-if="d && !estaDeshabilitado(d)"
+            @click="seleccionarDia(d)"
+            :class="[
+                'w-8 h-8 rounded-full flex items-center justify-center transition duration-200',
+                esSeleccionado(d)
+                ? 'bg-[var(--color-primary)] text-white font-semibold ring-2 ring-[var(--color-surface)]'
+                : 'hover:bg-[color:color-mix(in_srgb,var(--color-primary-light)_20%,transparent)]',
+                esHoy(d) && !esSeleccionado(d) ? 'text-[var(--color-primary)] font-bold' : ''
+            ]"
             >
-                <!-- Día válido y habilitado -->
-                <button
-                    v-if="d && !estaDeshabilitado(d)"
-                    @click="seleccionarDia(d)"
-                    :class="[
-                        'w-8 h-8 rounded-full flex items-center justify-center transition duration-200',
-                        esSeleccionado(d) ? 'text-white font-semibold ring-2 ring-white' : '',
-                        esHoy(d) && !esSeleccionado(d) ? 'text-[var(--color-primary)] font-bold' : '',
-                        !esSeleccionado(d) ? 'hover:bg-[var(--color-primary-light)]/20 dark:hover:bg-white/20' : ''
-                    ]"
-                    :style="esSeleccionado(d) ? { backgroundColor: 'var(--color-primary)' } : {}"
-                >
-                    {{ d }}
-                </button>
+            {{ d }}
+            </button>
 
-                <!-- Día deshabilitado -->
-                <span
-                    v-else-if="d"
-                    class="w-8 h-8 flex items-center justify-center text-gray-400 opacity-40 cursor-not-allowed"
-                >
-                    {{ d }}
-                </span>
+            <!-- Día deshabilitado -->
+            <span v-else-if="d"
+                class="w-8 h-8 flex items-center justify-center text-[var(--field-placeholder)] opacity-40 cursor-not-allowed">
+            {{ d }}
+            </span>
 
-                <!-- Día vacío -->
-                <span v-else></span>
-            </div>
+            <!-- Vacío -->
+            <span v-else></span>
+        </div>
         </div>
 
-        <!-- Botón limpiar -->
+        <!-- Limpiar -->
         <div class="mt-4 flex justify-end">
-            <button @click="$emit('clear')" class="text-xs text-gray-500 hover:text-red-500">
-                Limpiar
-            </button>
+        <button @click="$emit('clear')"
+                class="text-xs text-[var(--field-placeholder)] hover:text-[var(--color-complement-2)]">
+            Limpiar
+        </button>
         </div>
     </div>
 </template>

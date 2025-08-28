@@ -45,24 +45,25 @@ const maxWidthClass = computed(() => ({
 <template>
     <Teleport to="body">
         <transition name="fade">
+        <div
+            v-if="show"
+            role="dialog"
+            aria-modal="true"
+            class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-10 sm:px-0
+                bg-[var(--overlay-bg,rgba(0,0,0,.5))]"
+            @click.self="close"
+        >
+            <transition name="modal">
             <div
                 v-if="show"
-                role="dialog"
-                aria-modal="true"
-                class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-10 sm:px-0"
-                style="background-color: rgba(0, 0, 0, 0.5);"
-                @click.self="close"
+                class="w-full rounded-2xl overflow-hidden shadow-xl transform transition-all custom-scrollbar
+                    bg-[var(--color-surface)] text-[var(--color-foreground)] border border-[var(--color-border)]"
+                :class="maxWidthClass"
             >
-                <transition name="modal">
-                    <div
-                        v-if="show"
-                        class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl transform transition-all w-full custom-scrollbar"
-                        :class="maxWidthClass"
-                    >
-                        <slot />
-                    </div>
-                </transition>
+                <slot />
             </div>
+            </transition>
+        </div>
         </transition>
     </Teleport>
 </template>

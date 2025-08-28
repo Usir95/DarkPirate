@@ -36,7 +36,6 @@
                                 :uppercase="true"
                                 iconClass="fa fa-user"
                                 :error="form.errors.nombre"
-                                :success="!form.errors.nombre"
                             />
 
                         </div>
