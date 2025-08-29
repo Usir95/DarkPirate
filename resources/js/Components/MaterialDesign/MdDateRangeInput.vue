@@ -1,80 +1,44 @@
 <template>
     <div class="relative w-full my-3 px-1" data-md-input="true" ref="rootRef">
         <!-- Label flotante -->
-        <label v-if="label" :for="id"
-            class="absolute text-sm transition-all duration-300 ease-in-out px-1 pointer-events-none z-10 flex items-center gap-1 transform"
+        <label v-if="label" :for="id" class="md-label"
             :class="[
-                isFocused || (internalValue?.start && internalValue?.end)
-                    ? `text-[0.75rem] -top-2.5 scale-90 ${labelColor}`
-                    : 'top-2.5 scale-100 text-gray-500',
-                iconLeft || iconClass ? 'left-10' : 'left-3'
+                isFocused || internalValue ? `text-[0.75rem] -top-2.5 scale-90 ${GetLabelColor(props.error)}` : 'md-label--unfocused',
+                iconClass ? 'md-label--with-icon' : 'md-label--no-icon'
             ]"
-            :style="{ backgroundColor }"
         >
-            <span
-                v-if="required && (!internalValue?.start || !internalValue?.end) && !errorText"
-                class="text-red-500 font-bold text-base leading-none"
-            >*</span>
-
-            <svg
-                v-else-if="success && !errorText"
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4 text-[var(--color-primary-hover)] ml-1 transition-all duration-300 transform scale-100"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-
-            <svg
-                v-else-if="errorText"
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4 text-[var(--color-complement-2)] ml-1 transition-all duration-300 transform scale-100"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <IconAsterisk v-if="required && !internalValue && !errorText" />
+        <IconCheck v-else-if="success && !errorText" />
+        <IconError v-else-if="errorText" />
 
             {{ label }}
         </label>
 
-        <!-- Icono izquierdo -->
-        <div
-            v-if="iconLeft || iconClass"
-            class="absolute left-3 h-10 flex items-center pointer-events-none"
-            :style="{ color: borderColor }"
-        >
-            <slot name="iconLeft" v-if="iconLeft" />
-            <i v-else :class="iconClass" class="text-base leading-none"></i>
-        </div>
+        <!-- Icono izquierdo (slot o clase) -->
+        <IconInput v-if="iconClass" :icon-class="iconClass" :color="borderColor"></IconInput>
 
         <!-- Input -->
-        <input :id="id" type="text" :name="name" ref="inputRef"
-            class="w-full h-10 border rounded-xl text-gray-800 dark:text-gray-100 placeholder-transparent focus:outline-none focus:ring-2 transition-all duration-300 ease-in-out shadow-sm focus:shadow-md"
-            :class="{
-                'opacity-50 cursor-not-allowed': disabled || readonly,
-                'pl-10 pr-4': iconLeft || iconClass,
-                'px-4': !iconLeft && !iconClass,
-                'ring-1 ring-inset': success
-            }"
-            :value="formattedValue"
-            :disabled="disabled"
-            :readonly="readonly"
-            @click="toggleCalendar"
-            @keydown="onKeydown"
-            @focus="onFocus"
-            @blur="onBlur"
-            :style="{
-                backgroundColor,
-                borderColor,
-                '--tw-ring-color': borderColor,
-                transition: 'border-color 0.3s ease, background-color 0.3s ease'
-            }"
+        <input
+        :id="id"
+        type="text"
+        :name="name"
+        ref="inputRef"
+        :value="formattedValue" :disabled="disabled" :readonly="readonly"
+        @click="toggleCalendar"
+        @keydown="onKeydown"
+        @focus="onFocus"
+        @blur="onBlur"
+        class="w-full h-10 rounded-xl border-2
+                bg-[var(--md-bg)] border-[var(--md-border)]
+                text-[var(--field-fg)] placeholder-[var(--field-placeholder)]
+                focus:outline-none focus:ring-2 transition-all duration-300 shadow-sm focus:shadow-md"
+        :class="{
+            'opacity-50 cursor-not-allowed': disabled || readonly,
+            'pl-10 pr-4': iconLeft || iconClass,
+            'px-4': !iconLeft && !iconClass,
+            'ring-1 ring-inset': success
+        }"
+        :style="{ '--md-bg': 'var(--field-bg)', '--md-border': borderColor, '--tw-ring-color': borderColor }"
         />
 
         <!-- Calendario -->
@@ -102,8 +66,12 @@
 
 <script setup>
 import { ref, watch, computed, useSlots, onMounted, onBeforeUnmount } from 'vue'
-import MdDateRangeCalendar from './MdDateRangeCalendar.vue'
-import dayjs from 'dayjs'
+import MdDateRangeCalendar from './MdDateRangeCalendar.vue';
+import dayjs from 'dayjs';
+import { GetLabelColor,
+    GetBorderColor,
+    GetErrorText,
+ } from '@/Utils/InputUtils.js'
 
 const props = defineProps({
     modelValue: {
@@ -159,16 +127,13 @@ watch(internalValue, (val) => {
 
 const iconLeft = computed(() => !!slots.iconLeft)
 
-const backgroundColor = computed(() => isDark.value ? '#101828' : '#f3f4f6')
+const backgroundColor = computed(() => 'var(--field-bg)')
 
-const borderColor = computed(() => {
-    if (props.error || internalError.value) return 'var(--color-complement-2)'
-    if (props.success) return 'var(--color-primary-hover)'
-    if (isFocused.value) return 'var(--color-primary)'
-    return 'var(--color-primary-light)'
-})
+const borderColor = computed(() =>
+    GetBorderColor({error: props.error, success: props.success, isFocused: isFocused.value,internalError: internalError.value})
+)
 
-const labelColor = computed(() => props.error ? 'text-[var(--color-complement-2)]' : 'text-[var(--color-primary)]')
+const labelColor = computed(() => GetLabelColor(props.error))
 
 const errorText = computed(() => {
     if (internalError.value) return internalError.value
@@ -246,15 +211,6 @@ function validate() {
 }
 
 defineExpose({ validate })
-
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
-    isDark.value = prefersDark.matches
-    prefersDark.addEventListener('change', (e) => {
-        isDark.value = e.matches
-    })
-})
 
 onBeforeUnmount(() => {
     document.removeEventListener('click', handleClickOutside)

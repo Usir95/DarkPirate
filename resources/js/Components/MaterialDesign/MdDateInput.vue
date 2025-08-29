@@ -133,6 +133,7 @@ watch(internalValue, (val) => {
 /* ======================= Computed ======================== */
 const iconLeft = computed(() => !!slots.iconLeft) // si mantienes el slot; si no, quedará false
 const backgroundColor = computed(() => 'var(--field-bg)')
+
 const borderColor = computed(() =>
     GetBorderColor({error: props.error, success: props.success, isFocused: isFocused.value,internalError: internalError.value})
 )
