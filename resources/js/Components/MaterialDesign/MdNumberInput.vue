@@ -33,19 +33,19 @@
             @keydown="onKeydown"
             @input="updateValue($event.target.value)"
             :class="[
-                'w-full h-10 border-2 rounded-xl text-gray-800 dark:text-gray-100 placeholder-white',
+                'w-full h-10 border-2 rounded-xl',
+                'text-[var(--field-fg)] placeholder-[var(--field-placeholder)] caret-[var(--field-fg)]',
                 'focus:outline-none transition-all duration-300 ease-in-out shadow-sm focus:shadow-md',
                 inputPadding,
-                {
-                    'opacity-50 cursor-not-allowed': disabled || readonly
-                }
+                { 'opacity-50 cursor-not-allowed': disabled || readonly }
             ]"
             :style="{
-                backgroundColor: 'var(--color-background)',
+                backgroundColor: 'var(--field-bg)',
                 borderColor,
                 transition: 'border-color 0.3s ease, background-color 0.3s ease'
             }"
         />
+
 
         <!-- Error o ayuda + contador -->
         <div class="flex items-center justify-between text-xs px-1 mt-1 leading-tight">

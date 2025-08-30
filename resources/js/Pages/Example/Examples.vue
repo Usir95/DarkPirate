@@ -37,8 +37,8 @@
                                 iconClass="fa fa-user"
                                 :error="form.errors.nombre"
                             />
-
                         </div>
+
                         <div>
                             <MdNumberInput
                                 v-model="form.edad_aproximada"
@@ -69,7 +69,13 @@
                             />
                         </div>
                         <div class="col-span-2">
-                            <MdSelectInput v-model="form.nivel_peligro" required label="Nivel de Peligro" :options="NivelesPeligro" />
+                            <MdSelectInput
+                                v-model="form.nivel_peligro"
+                                :options="NivelesPeligro"
+                                required
+                                label="Nivel de Peligro"
+                                :error="form.errors.nivel_peligro"
+                            />
                         </div>
 
                         <div class="col-span-2">
@@ -77,12 +83,20 @@
                         </div>
 
                         <div class="col-span-1 flex justify-around">
-                            <MdCheckbox v-model="form.es_invisible" required label="Es invisible" />
+                            <MdCheckbox
+                                v-model="form.es_invisible"
+                                required
+                                label="Es invisible" />
                             <MdCheckbox v-model="form.tiene_alas" required label="Tiene alas" />
                         </div>
 
                         <div class="col-span-1">
-                            <MdSelectInput v-model="form.genero" required label="Género" :options="Generos" />
+                            <MdSelectInput
+                                v-model="form.genero"
+                                :options="Generos"
+                                required
+                                label="Género"
+                            />
                         </div>
 
                         <div>

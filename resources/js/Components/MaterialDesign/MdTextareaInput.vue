@@ -28,21 +28,23 @@
             :readonly="readonly"
             :minlength="minlength"
             :maxlength="maxlength"
+            :placeholder="placeholder"
             @focus="onFocus"
             @blur="onBlur"
             @keydown="onKeydown"
             @input="updateValue($event.target.value)"
             :class="[
-                'w-full border-2 rounded-xl text-gray-800 dark:text-gray-100 placeholder-white',
+                'w-full border-2 rounded-xl',
+                'text-[var(--field-fg)] placeholder-[var(--field-placeholder)]',
                 'focus:outline-none transition-all duration-300 ease-in-out shadow-sm focus:shadow-md',
+                'caret-[var(--color-primary)]',
                 inputPadding,
-                {
-                    'opacity-50 cursor-not-allowed': disabled || readonly
-                }
+                { 'opacity-50 cursor-not-allowed': disabled || readonly }
             ]"
             :style="{
-                backgroundColor: 'var(--color-background)',
+                backgroundColor: 'var(--field-bg)',
                 borderColor,
+                '--tw-ring-color': borderColor,
                 transition: 'border-color 0.3s ease, background-color 0.3s ease'
             }"
         />
