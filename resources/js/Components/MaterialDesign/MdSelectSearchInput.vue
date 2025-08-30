@@ -1,133 +1,133 @@
 <template>
-  <div ref="wrapperRef" class="relative w-full my-3 px-1" data-md-input="true">
-    <!-- Label flotante -->
-    <label v-if="label" :for="id" class="md-label"
-      :class="[
-        (isFocused || !isEmpty)
-          ? `text-[0.75rem] -top-2.5 scale-90 ${GetLabelColor(errorText || internalError)}`
-          : 'md-label--unfocused',
-        iconClass ? 'md-label--with-icon' : 'md-label--no-icon'
-      ]">
-      <IconAsterisk v-if="required && isEmpty && !errorText" />
-      <IconCheck v-else-if="success && !errorText && !internalError" />
-      <IconError v-else-if="errorText || internalError" />
-      {{ label }}
-    </label>
+    <div ref="wrapperRef" class="relative w-full my-3 px-1" data-md-input="true">
+        <!-- Label flotante -->
+        <label v-if="label" :for="id" class="md-label"
+        :class="[
+            (isFocused || !isEmpty)
+            ? `text-[0.75rem] -top-2.5 scale-90 ${GetLabelColor(errorText || internalError)}`
+            : 'md-label--unfocused',
+            iconClass ? 'md-label--with-icon' : 'md-label--no-icon'
+        ]">
+        <IconAsterisk v-if="required && isEmpty && !errorText" />
+        <IconCheck v-else-if="success && !errorText && !internalError" />
+        <IconError v-else-if="errorText || internalError" />
+        {{ label }}
+        </label>
 
-    <!-- Icono izquierdo -->
-    <IconInput v-if="iconClass" :icon-class="iconClass" :color="borderColor" />
+        <!-- Icono izquierdo -->
+        <IconInput v-if="iconClass" :icon-class="iconClass" :color="borderColor" />
 
-    <!-- Input visual (combobox) -->
-    <div
-      :id="id"
-      role="combobox"
-      :aria-expanded="isOpen"
-      :aria-controls="`${id}-listbox`"
-      aria-haspopup="listbox"
-      :aria-required="required || undefined"
-      :aria-activedescendant="isOpen ? optionId(activeIndex) : undefined"
-      :tabindex="disabled || readonly ? -1 : 0"
-      class="w-full min-h-10 rounded-xl text-sm flex flex-wrap items-center gap-1 cursor-pointer transition-all duration-300 ease-in-out shadow-sm ring-1 ring-inset text-[var(--field-fg)]"
-      :class="[ iconClass ? 'pl-10 pr-9' : 'px-4', { 'opacity-50 cursor-not-allowed': disabled || readonly } ]"
-      @keydown="onKeydown"
-      @click="open"
-      @focus="isFocused = true"
-      @blur="isFocused = false"
-      :style="{ backgroundColor: 'var(--field-bg)', borderColor, '--tw-ring-color': borderColor, borderWidth: '1px' }"
-    >
-      <template v-if="multiple">
-        <span v-for="option in selectedOptions" :key="String(option.value)"
-          class="bg-[var(--color-primary)] text-white px-3 py-1 rounded-full text-xs flex items-center gap-1">
-          {{ option.label }}
-          <button type="button" class="ml-1 text-xs px-1 cursor-pointer" @click.stop="removeOption(option)">×</button>
-        </span>
-        <span v-if="!selectedOptions.length" class="opacity-50 text-[var(--field-placeholder)]">{{ placeholder }}</span>
-      </template>
+        <!-- Input visual (combobox) -->
+        <div
+        :id="id"
+        role="combobox"
+        :aria-expanded="isOpen"
+        :aria-controls="`${id}-listbox`"
+        aria-haspopup="listbox"
+        :aria-required="required || undefined"
+        :aria-activedescendant="isOpen ? optionId(activeIndex) : undefined"
+        :tabindex="disabled || readonly ? -1 : 0"
+        class="w-full min-h-10 rounded-xl text-sm flex flex-wrap items-center gap-1 cursor-pointer transition-all duration-300 ease-in-out shadow-sm ring-1 ring-inset text-[var(--field-fg)]"
+        :class="[ iconClass ? 'pl-10 pr-9' : 'px-4', { 'opacity-50 cursor-not-allowed': disabled || readonly } ]"
+        @keydown="onKeydown"
+        @click="open"
+        @focus="isFocused = true"
+        @blur="isFocused = false"
+        :style="{ backgroundColor: 'var(--field-bg)', borderColor, '--tw-ring-color': borderColor, borderWidth: '1px' }"
+        >
+        <template v-if="multiple">
+            <span v-for="option in selectedOptions" :key="String(option.value)"
+            class="bg-[var(--color-primary)] text-white px-3 py-1 rounded-full text-xs flex items-center gap-1">
+            {{ option.label }}
+            <button type="button" class="ml-1 text-xs px-1 cursor-pointer" @click.stop="removeOption(option)">×</button>
+            </span>
+            <span v-if="!selectedOptions.length" class="opacity-50 text-[var(--field-placeholder)]">{{ placeholder }}</span>
+        </template>
 
-      <template v-else>
-        <span class="truncate select-none text-[var(--field-fg)]"
-              :class="{ 'opacity-50 text-[var(--field-placeholder)]': isEmpty }">
-          {{ selectedLabel || '' }}
-        </span>
-      </template>
+        <template v-else>
+            <span class="truncate select-none text-[var(--field-fg)]"
+                :class="{ 'opacity-50 text-[var(--field-placeholder)]': isEmpty }">
+            {{ selectedLabel || '' }}
+            </span>
+        </template>
+        </div>
+
+        <!-- Dropdown con búsqueda + virtualización -->
+        <transition name="fade">
+        <ul v-if="isOpen"
+            ref="listRef"
+            :id="`${id}-listbox`"
+            role="listbox"
+            :aria-multiselectable="!!multiple"
+            @scroll="onListScroll"
+            class="absolute z-20 left-0 right-0 mt-1 max-h-60 overflow-auto rounded-xl border bg-[var(--color-surface)] text-[var(--field-fg)] shadow-lg text-sm"
+            :style="{ borderColor: 'var(--color-border)' }">
+
+            <!-- Barra de búsqueda -->
+            <li class="px-3 py-2 sticky top-0 bg-[var(--color-surface)] z-10">
+            <input
+                ref="searchRef"
+                v-model="search"
+                type="text"
+                placeholder="Buscar..."
+                class="w-full rounded-lg border px-3 py-1 text-sm
+                    bg-[var(--field-bg)] text-[var(--field-fg)]
+                    border-[var(--color-border)] focus:outline-none
+                    focus:ring-1 focus:ring-[var(--color-primary)]"/>
+            </li>
+
+            <!-- Limpiar -->
+            <li v-if="clearable && !isEmpty"
+                role="option"
+                :id="optionId(-1)"
+                aria-selected="false"
+                class="px-4 py-2 italic text-[var(--field-placeholder)] hover:bg-[var(--color-primary-light)]/15 cursor-pointer"
+                @click.stop="clearSelection">
+            — Limpiar selección —
+            </li>
+
+            <!-- Espaciador superior -->
+            <li aria-hidden="true" :style="{ height: topPad + 'px' }"></li>
+
+            <!-- Items visibles -->
+            <li v-for="(option, i) in visibleOptions"
+                :key="String(option.value ?? (startIndex + i))"
+                :data-row="true"
+                role="option"
+                :id="optionId(startIndex + i)"
+                :aria-selected="isSelected(option)"
+                :aria-disabled="!!option.disabled"
+                @click.stop="(e) => !option.disabled && selectOption(option, e)"
+                class="px-4 py-2 cursor-pointer transition-colors"
+                :class="[
+                option.disabled ? 'opacity-50 cursor-not-allowed' :
+                ( isSelected(option) ? 'bg-[var(--color-primary-light)]/25' : 'hover:bg-[var(--color-primary-light)]/15' ),
+                activeIndex === (startIndex + i) ? 'outline-1 outline-[var(--color-primary)]' : ''
+                ]">
+            {{ option.label }}
+            </li>
+
+            <!-- Espaciador inferior -->
+            <li aria-hidden="true" :style="{ height: bottomPad + 'px' }"></li>
+
+            <!-- Vacío -->
+            <li v-if="!filtered.length" class="px-4 py-2 text-[var(--field-placeholder)]">Sin resultados</li>
+        </ul>
+        </transition>
+
+        <!-- Hidden inputs para formularios -->
+        <input v-if="name && !multiple" type="hidden" :name="name" :value="submitValue">
+        <template v-if="name && multiple">
+        <input v-for="(v,i) in (modelValue || [])" :key="i" type="hidden" :name="`${name}[]`" :value="v">
+        </template>
+
+        <!-- Helper o error -->
+        <div class="flex items-center justify-between text-xs px-1 mt-1 leading-tight">
+        <div class="ml-1" :class="(errorText || internalError) ? 'text-[var(--color-complement-2)] text-sm' : 'text-[var(--field-placeholder)]'">
+            {{ errorText || internalError || helper }}
+        </div>
+        </div>
     </div>
-
-    <!-- Dropdown con búsqueda + virtualización -->
-    <transition name="fade">
-      <ul v-if="isOpen"
-          ref="listRef"
-          :id="`${id}-listbox`"
-          role="listbox"
-          :aria-multiselectable="!!multiple"
-          @scroll="onListScroll"
-          class="absolute z-20 left-0 right-0 mt-1 max-h-60 overflow-auto rounded-xl border bg-[var(--color-surface)] text-[var(--field-fg)] shadow-lg text-sm"
-          :style="{ borderColor: 'var(--color-border)' }">
-
-        <!-- Barra de búsqueda -->
-        <li class="px-3 py-2 sticky top-0 bg-[var(--color-surface)] z-10">
-          <input
-            ref="searchRef"
-            v-model="search"
-            type="text"
-            placeholder="Buscar..."
-            class="w-full rounded-lg border px-3 py-1 text-sm
-                   bg-[var(--field-bg)] text-[var(--field-fg)]
-                   border-[var(--color-border)] focus:outline-none
-                   focus:ring-1 focus:ring-[var(--color-primary)]"/>
-        </li>
-
-        <!-- Limpiar -->
-        <li v-if="clearable && !isEmpty"
-            role="option"
-            :id="optionId(-1)"
-            aria-selected="false"
-            class="px-4 py-2 italic text-[var(--field-placeholder)] hover:bg-[var(--color-primary-light)]/15 cursor-pointer"
-            @click.stop="clearSelection">
-          — Limpiar selección —
-        </li>
-
-        <!-- Espaciador superior -->
-        <li aria-hidden="true" :style="{ height: topPad + 'px' }"></li>
-
-        <!-- Items visibles -->
-        <li v-for="(option, i) in visibleOptions"
-            :key="String(option.value ?? (startIndex + i))"
-            :data-row="true"
-            role="option"
-            :id="optionId(startIndex + i)"
-            :aria-selected="isSelected(option)"
-            :aria-disabled="!!option.disabled"
-            @click.stop="(e) => !option.disabled && selectOption(option, e)"
-            class="px-4 py-2 cursor-pointer transition-colors"
-            :class="[
-              option.disabled ? 'opacity-50 cursor-not-allowed' :
-              ( isSelected(option) ? 'bg-[var(--color-primary-light)]/25' : 'hover:bg-[var(--color-primary-light)]/15' ),
-              activeIndex === (startIndex + i) ? 'outline outline-1 outline-[var(--color-primary)]' : ''
-            ]">
-          {{ option.label }}
-        </li>
-
-        <!-- Espaciador inferior -->
-        <li aria-hidden="true" :style="{ height: bottomPad + 'px' }"></li>
-
-        <!-- Vacío -->
-        <li v-if="!filtered.length" class="px-4 py-2 text-[var(--field-placeholder)]">Sin resultados</li>
-      </ul>
-    </transition>
-
-    <!-- Hidden inputs para formularios -->
-    <input v-if="name && !multiple" type="hidden" :name="name" :value="submitValue">
-    <template v-if="name && multiple">
-      <input v-for="(v,i) in (modelValue || [])" :key="i" type="hidden" :name="`${name}[]`" :value="v">
-    </template>
-
-    <!-- Helper o error -->
-    <div class="flex items-center justify-between text-xs px-1 mt-1 leading-tight">
-      <div class="ml-1" :class="(errorText || internalError) ? 'text-[var(--color-complement-2)] text-sm' : 'text-[var(--field-placeholder)]'">
-        {{ errorText || internalError || helper }}
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup>
@@ -141,21 +141,21 @@ import { GetBorderColor, GetErrorText, GetLabelColor } from '@/Utils/InputUtils.
 
 /* ===== Props / Emits ===== */
 const props = defineProps({
-  id: { type: String, default: 'md-select-' + Math.random().toString(36).slice(2) },
-  name: { type: String, default: '' },
-  modelValue: [String, Number, Object, Array, null],
-  options: { type: Array, default: () => [] }, // [{ value, label, disabled? }]
-  label: { type: String, default: 'Selecciona una opción' },
-  placeholder: { type: String, default: 'Selecciona una opción' },
-  iconClass: { type: String, default: '' },
-  error: [Boolean, String, Array],
-  success: Boolean,
-  required: Boolean,
-  helper: String,
-  multiple: Boolean,
-  clearable: { type: Boolean, default: true },
-  disabled: { type: Boolean, default: false },
-  readonly: { type: Boolean, default: false },
+    id: { type: String, default: 'md-select-' + Math.random().toString(36).slice(2) },
+    name: { type: String, default: '' },
+    modelValue: [String, Number, Object, Array, null],
+    options: { type: Array, default: () => [] },
+    label: { type: String, default: 'Selecciona una opción' },
+    placeholder: { type: String, default: 'Selecciona una opción' },
+    iconClass: { type: String, default: '' },
+    error: [Boolean, String, Array],
+    success: Boolean,
+    required: Boolean,
+    helper: String,
+    multiple: Boolean,
+    clearable: { type: Boolean, default: true },
+    disabled: { type: Boolean, default: false },
+    readonly: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -166,15 +166,15 @@ const searchRef = ref(null)
 const isOpen = ref(false)
 const isFocused = ref(false)
 const internalError = ref('')
-const activeIndex = ref(0)       // índice relativo dentro de "filtered"
+const activeIndex = ref(0)
 const search = ref('')
 const searchDeb = ref('')
 
 /* simple debounce sin dependencias */
 let searchTimer = null
 watch(search, v => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => { searchDeb.value = v }, 120)
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => { searchDeb.value = v }, 120)
 })
 
 /* ===== Derived (selección) ===== */
