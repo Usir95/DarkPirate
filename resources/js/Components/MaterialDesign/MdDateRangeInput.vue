@@ -1,5 +1,5 @@
 <template>
-    <div class="relative w-full my-3 px-1" data-md-input="true">
+    <div class="relative w-full my-3 px-1" data-md-input="true" ref="wrapperRef">
         <!-- Label -->
         <label v-if="label" :for="id" class="md-label" :class="[
             isFocused || (internalValue?.start && internalValue?.end)
@@ -53,7 +53,7 @@
                 @update:modelValue="updateValue"
                 @close="closeCalendar"
                 @clear="() => updateValue({ start: '', end: '' })"
-                />
+            />
         </div>
 
         <!-- Mensaje -->
@@ -67,11 +67,19 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, onBeforeUnmount, watch, computed } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import MdDateRangeCalendar from './MdDateRangeCalendar.vue'
+import IconCheck from '../Icons/IconCheck.vue'
+import IconError from '../Icons/IconError.vue'
+import IconAsterisk from '../Icons/IconAsterisk.vue'
+import IconInput from '../Icons/IconInput.vue'
 import { GetLabelColor, GetBorderColor, GetErrorText } from '@/Utils/InputUtils.js'
 
 const props = defineProps({
+    id: { type: String, default: '' },
+    name: { type: String, default: '' },
+    disabled: Boolean,
     modelValue: { type: Object, default: () => ({ start: '', end: '' }) },
     required: Boolean, label: String, placeholder: String, name: String, id: String,
     disabled: Boolean, readonly: Boolean, error: [Boolean, String, Array],
@@ -81,26 +89,25 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'focus', 'blur'])
 
+const wrapperRef = ref(null)
 const showCalendar = ref(false)
 const isFocused = ref(false)
 const internalError = ref('')
 const inputRef = ref(null)
 
 const internalValue = ref(
-  props.modelValue && typeof props.modelValue === 'object'
-    ? props.modelValue
-    : { start: '', end: '' }
+    props.modelValue && typeof props.modelValue === 'object' ? props.modelValue : { start: '', end: '' }
 )
 
 // sync-in
 watch(() => props.modelValue, (v) => {
-  internalValue.value = v && typeof v === 'object' ? v : { start: '', end: '' }
+    internalValue.value = v && typeof v === 'object' ? v : { start: '', end: '' }
 })
 
 const hasIcon = computed(() => !!props.iconClass)
 
 const borderColor = computed(() =>
-  GetBorderColor({ error: props.error, success: props.success, isFocused: isFocused.value, internalError: internalError.value })
+    GetBorderColor({ error: props.error, success: props.success, isFocused: isFocused.value, internalError: internalError.value })
 )
 
 const errorText = computed(() =>
@@ -121,10 +128,15 @@ const formattedValue = computed(() => {
 function toggleCalendar(){ if (!props.disabled && !props.readonly) showCalendar.value = !showCalendar.value }
 function closeCalendar(){ showCalendar.value = false }
 
+onClickOutside(wrapperRef, () => {
+    if (showCalendar.value) closeCalendar()
+})
+
 function updateValue(v){
     internalValue.value = v
     internalError.value = props.required && !(v?.start && v?.end) ? 'Este campo es obligatorio' : ''
     emit('update:modelValue', v)
+    if (v?.start && v?.end) closeCalendar()
 }
 
 function onFocus(e){
@@ -140,6 +152,11 @@ function onBlur(e){
 function onKeydown(e){
     if (e.key === 'Tab' && props.required && !(internalValue.value.start && internalValue.value.end)) e.preventDefault()
 }
+
+window.addEventListener('keydown', onEsc)
+function onEsc(e){ if (e.key === 'Escape') closeCalendar() }
+
+onBeforeUnmount(() => window.removeEventListener('keydown', onEsc))
 
 defineExpose({
     validate: () => !(props.required && !(internalValue.value.start && internalValue.value.end))
